@@ -1,7 +1,10 @@
 package com.egomaa.demo.employeeservice.exception;
 
-public class DuplicateResourceException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class DuplicateResourceException extends ApiException {
+
     public DuplicateResourceException(String message) {
-        super(message);
+        super(message, HttpStatus.CONFLICT);
     }
 }

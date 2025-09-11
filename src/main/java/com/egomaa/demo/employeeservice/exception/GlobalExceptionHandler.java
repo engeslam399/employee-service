@@ -1,66 +1,62 @@
 package com.egomaa.demo.employeeservice.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handle Resource Not Found
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(
-            ResourceNotFoundException ex, WebRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                ex.getMessage(),
-                request.getDescription(false));
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    // Handle custom API exceptions
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(ApiException ex, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(ex.getStatus().value())
+                .error(ex.getStatus().getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.status(ex.getStatus()).body(error);
     }
 
-    // Handle Validation Errors
+    // Handle validation errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationErrors(
-            MethodArgumentNotValidException ex, WebRequest request) {
-        String message = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
+    public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .findFirst()
                 .orElse("Validation error");
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                message,
-                request.getDescription(false));
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(400)
+                .error("Bad Request")
+                .message(message)
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.badRequest().body(error);
     }
 
-    // Handle Duplication Errors
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResource(
-            DuplicateResourceException ex, WebRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                ex.getMessage(),
-                request.getDescription(false));
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT); // 409 Conflict
-    }
-
-
-    // Handle All Other Exceptions
+    // Handle uncaught exceptions
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex, WebRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                ex.getMessage(),
-                request.getDescription(false));
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(500)
+                .error("Internal Server Error")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.internalServerError().body(error);
     }
+
+
+
+
 }
