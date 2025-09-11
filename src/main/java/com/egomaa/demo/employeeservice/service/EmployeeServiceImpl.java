@@ -2,6 +2,7 @@ package com.egomaa.demo.employeeservice.service;
 
 import com.egomaa.demo.employeeservice.dto.EmployeeDto;
 import com.egomaa.demo.employeeservice.entity.Employee;
+import com.egomaa.demo.employeeservice.exception.DuplicateResourceException;
 import com.egomaa.demo.employeeservice.exception.ResourceNotFoundException;
 import com.egomaa.demo.employeeservice.repo.EmployeeRepo;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDto createEmployee(EmployeeDto employeeDto) {
+        if (employeeRepo.existsByEmail(employeeDto.getEmail())) {
+            throw new DuplicateResourceException("Email already exists: " + employeeDto.getEmail());
+        }
         Employee saved = employeeRepo.save(mapToEntity(employeeDto));
         return mapToDto(saved);
     }

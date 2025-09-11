@@ -11,7 +11,9 @@ import java.time.LocalDate;
 @Setter
 @Getter
 @Entity
-@Table(name = "employees")
+@Table(name = "employees", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "email")
+})
 public class Employee {
 
     @Id
@@ -19,6 +21,8 @@ public class Employee {
     private Long id;
 
     private String fullName;
+
+    @Column(nullable = false, unique = true)   // 👈 ensures unique email in DB
     private String email;
     private LocalDate birthDate;
     private Double salary;
