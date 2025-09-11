@@ -1,46 +1,59 @@
 package com.egomaa.demo.employeeservice.controller;
 
+import com.egomaa.demo.employeeservice.constants.AppConstants;
+import com.egomaa.demo.employeeservice.dto.ApiResponse;
 import com.egomaa.demo.employeeservice.dto.EmployeeDto;
 import com.egomaa.demo.employeeservice.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
-@RequestMapping("/api/employees")
+@RequestMapping(AppConstants.EMPLOYEES_API)
 @RequiredArgsConstructor
 public class EmployeeController {
 
     private final EmployeeService employeeService;
 
     @PostMapping
-    public ResponseEntity<EmployeeDto> createEmployee(@Valid @RequestBody EmployeeDto employeeDto) {
-        return ResponseEntity.ok(employeeService.createEmployee(employeeDto));
+    public ResponseEntity<ApiResponse<EmployeeDto>> createEmployee(
+            @Valid @RequestBody EmployeeDto employeeDto) {
+        EmployeeDto created = employeeService.createEmployee(employeeDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>("success", AppConstants.EMPLOYEE_CREATED, created));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Long id) {
-        return ResponseEntity.ok(employeeService.getEmployeeById(id));
+    public ResponseEntity<ApiResponse<EmployeeDto>> getEmployeeById(@PathVariable Long id) {
+        EmployeeDto employee = employeeService.getEmployeeById(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>("success", AppConstants.EMPLOYEE_RETRIEVED, employee));
     }
 
     @GetMapping
-    public ResponseEntity<List<EmployeeDto>> getAllEmployees() {
-        return ResponseEntity.ok(employeeService.getAllEmployees());
+    public ResponseEntity<ApiResponse<List<EmployeeDto>>> getAllEmployees() {
+        List<EmployeeDto> employees = employeeService.getAllEmployees();
+        return ResponseEntity.ok(
+                new ApiResponse<>("success", AppConstants.EMPLOYEES_RETRIEVED, employees));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeDto> updateEmployee(
+    public ResponseEntity<ApiResponse<EmployeeDto>> updateEmployee(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeDto employeeDto) {
-        return ResponseEntity.ok(employeeService.updateEmployee(id, employeeDto));
+        EmployeeDto updated = employeeService.updateEmployee(id, employeeDto);
+        return ResponseEntity.ok(
+                new ApiResponse<>("success", AppConstants.EMPLOYEE_UPDATED, updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .body(new ApiResponse<>("success", AppConstants.EMPLOYEE_DELETED, null));
     }
 }
+
