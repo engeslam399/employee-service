@@ -2,10 +2,6 @@ package com.egomaa.demo.employeeservice.constants;
 
 public interface AppConstants {
 
-    // Paths
-    String BASE_API = "/api";
-    String EMPLOYEES_API = BASE_API + "/employees";
-
     // Success Messages
     String EMPLOYEE_CREATED = "Employee created successfully";
     String EMPLOYEE_RETRIEVED = "Employee retrieved successfully";

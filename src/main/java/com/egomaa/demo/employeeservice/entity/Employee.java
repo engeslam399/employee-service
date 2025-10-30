@@ -30,7 +30,7 @@ public class Employee {
     @Column(name = "email", nullable = false, unique = true,  length = 100)
     private String email;
 
-    @Column(name = "personal_email", length = 100)
+    @Column(name = "personal_email", nullable = false, unique = true, length = 100)
     private String personalEmail;
 
     @Column(name = "hire_date", nullable = false)
