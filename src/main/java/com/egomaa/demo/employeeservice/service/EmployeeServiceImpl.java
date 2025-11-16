@@ -6,6 +6,7 @@ import com.egomaa.demo.employeeservice.exception.DuplicateResourceException;
 import com.egomaa.demo.employeeservice.exception.ResourceNotFoundException;
 import com.egomaa.demo.employeeservice.repo.EmployeeRepo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepo employeeRepo;
@@ -39,45 +41,68 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDto createEmployee(EmployeeDto employeeDto) {
+        log.info("Attempting to create employee with email: {}", employeeDto.getEmail());
         if (employeeRepo.existsByEmail(employeeDto.getEmail())) {
+            log.error("Duplicate email detected: {}", employeeDto.getEmail());
             throw new DuplicateResourceException("Email already exists: " + employeeDto.getEmail());
         }
         Employee saved = employeeRepo.save(mapToEntity(employeeDto));
+        log.info("Employee created successfully with ID: {}", saved.getId());
         return mapToDto(saved);
     }
 
     @Override
     public EmployeeDto getEmployeeById(Long id) {
+        log.info("Searching for employee with ID: {}", id);
         return employeeRepo.findById(id)
-                .map(this::mapToDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
+                .map(employee -> {
+                    log.debug("Employee found: {}", employee);
+                    return mapToDto(employee);
+                })
+                .orElseThrow(() -> {
+                    log.error("Employee not found with ID: {}", id);
+                    return new ResourceNotFoundException("Employee not found with id: " + id);
+                });
     }
 
     @Override
     public EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto) {
+        log.info("Updating employee with ID: {}", id);
         Employee employee = employeeRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.error("Employee not found with ID: {}", id);
+                    return new ResourceNotFoundException("Employee not found with id: " + id);
+                });
 
         employee.setFullName(employeeDto.getFullName());
         employee.setEmail(employeeDto.getEmail());
         employee.setBirthDate(employeeDto.getBirthDate());
         employee.setSalary(employeeDto.getSalary());
 
-        return mapToDto(employeeRepo.save(employee));
+        Employee updated = employeeRepo.save(employee);
+        log.info("Employee updated successfully: {}", updated.getId());
+        return mapToDto(updated);
     }
 
     @Override
     public List<EmployeeDto> getAllEmployees() {
-        return employeeRepo.findAll()
-                .stream().map(this::mapToDto)
+        log.info("Fetching all employees from database");
+        List<EmployeeDto> employees = employeeRepo.findAll()
+                .stream()
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
+        log.info("Retrieved {} employees", employees.size());
+        return employees;
     }
-
 
     @Override
     public void deleteEmployee(Long id) {
+        log.warn("Deleting employee with ID: {}", id);
+        if (!employeeRepo.existsById(id)) {
+            log.error("Cannot delete, employee not found with ID: {}", id);
+            throw new ResourceNotFoundException("Employee not found with id: " + id);
+        }
         employeeRepo.deleteById(id);
+        log.info("Employee deleted successfully with ID: {}", id);
     }
-
-
 }
