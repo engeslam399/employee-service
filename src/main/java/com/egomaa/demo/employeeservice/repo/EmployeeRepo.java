@@ -1,8 +1,6 @@
 package com.egomaa.demo.employeeservice.repo;
 
 import com.egomaa.demo.employeeservice.entity.Employee;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EmployeeRepo extends JpaRepository<Employee, Long> {
