@@ -1,9 +1,7 @@
 package com.egomaa.demo.employeeservice.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -22,7 +20,7 @@ public class Employee {
 
     private String fullName;
 
-    @Column(nullable = false, unique = true)   // 👈 ensures unique email in DB
+    @Column(nullable = false, unique = true) // 👈 ensures unique email in DB
     private String email;
     private LocalDate birthDate;
     private Double salary;

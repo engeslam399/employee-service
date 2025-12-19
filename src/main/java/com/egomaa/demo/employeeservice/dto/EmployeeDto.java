@@ -1,9 +1,7 @@
 package com.egomaa.demo.employeeservice.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
