@@ -10,6 +10,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.data.RepositoryItemReader;
 import org.springframework.batch.item.data.RepositoryItemWriter;
@@ -75,9 +76,53 @@ public class BatchConfig {
     }
 
     @Bean
-    public Job salaryIncreaseJob(Step salaryIncreaseStep) {
+    public Step summaryReportStep() {
+        return new StepBuilder("summaryReportStep", jobRepository)
+                .tasklet((contribution, chunkContext) -> {
+                    // This runs after all salaries are increased
+                    long totalEmployees = employeeRepo.count();
+                    Double amount = (Double) chunkContext.getStepContext()
+                            .getJobParameters().get("amount");
+
+                    log.info("=".repeat(50));
+                    log.info("Salary Increase Job Completed Successfully");
+                    log.info("Total employees updated: {}", totalEmployees);
+                    log.info("Amount increased per employee: {}", amount);
+                    log.info("=".repeat(50));
+
+                    return RepeatStatus.FINISHED;
+                }, platformTransactionManager)
+                .build();
+    }
+
+    @Bean
+    public Step auditLogStep() {
+        return new StepBuilder("auditLogStep", jobRepository)
+                .tasklet((contribution, chunkContext) -> {
+                    // This runs after the summary report
+                    Long jobExecutionId = chunkContext.getStepContext()
+                            .getStepExecution()
+                            .getJobExecutionId();
+                    String jobName = chunkContext.getStepContext()
+                            .getJobName();
+
+                    log.warn("AUDIT LOG: Job '{}' with execution ID {} completed at {}",
+                            jobName,
+                            jobExecutionId,
+                            java.time.LocalDateTime.now());
+                    log.warn("AUDIT LOG: All steps executed successfully");
+
+                    return RepeatStatus.FINISHED;
+                }, platformTransactionManager)
+                .build();
+    }
+
+    @Bean
+    public Job salaryIncreaseJob(Step salaryIncreaseStep, Step summaryReportStep, Step auditLogStep) {
         return new JobBuilder("salaryIncreaseJob", jobRepository)
-                .start(salaryIncreaseStep)
+                .start(salaryIncreaseStep) // Step 1: Process and update employee salaries
+                .next(summaryReportStep) // Step 2: Generate summary report
+                .next(auditLogStep) // Step 3: Log audit information
                 .build();
     }
 }
