@@ -1,5 +1,6 @@
 package com.egomaa.demo.employeeservice.controller;
 
+import com.egomaa.demo.employeeservice.dto.SalaryIncreaseRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -8,8 +9,8 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,8 +23,9 @@ public class BatchController {
     private final Job salaryIncreaseJob;
 
     @PostMapping("/increase-salary")
-    public ResponseEntity<String> runSalaryIncreaseJob(@RequestParam Double amount) {
+    public ResponseEntity<String> runSalaryIncreaseJob(@RequestBody SalaryIncreaseRequest request) {
         try {
+            Double amount = request.getAmount();
             log.info("Starting salary increase job with amount: {}", amount);
 
             JobParameters jobParameters = new JobParametersBuilder()
