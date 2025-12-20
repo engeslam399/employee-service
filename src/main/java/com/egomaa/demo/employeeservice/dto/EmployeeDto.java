@@ -25,4 +25,7 @@ public class EmployeeDto {
     @NotNull(message = "Salary is required")
     @Positive(message = "Salary must be greater than 0")
     private Double salary;
+
+    private Long departmentId;
+    private String departmentName;
 }

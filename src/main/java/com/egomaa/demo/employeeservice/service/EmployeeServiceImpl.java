@@ -1,9 +1,11 @@
 package com.egomaa.demo.employeeservice.service;
 
 import com.egomaa.demo.employeeservice.dto.EmployeeDto;
+import com.egomaa.demo.employeeservice.entity.Department;
 import com.egomaa.demo.employeeservice.entity.Employee;
 import com.egomaa.demo.employeeservice.exception.DuplicateResourceException;
 import com.egomaa.demo.employeeservice.exception.ResourceNotFoundException;
+import com.egomaa.demo.employeeservice.repo.DepartmentRepo;
 import com.egomaa.demo.employeeservice.repo.EmployeeRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepo employeeRepo;
+    private final DepartmentRepo departmentRepo;
 
     private EmployeeDto mapToDto(Employee employee) {
         EmployeeDto dto = new EmployeeDto();
@@ -26,6 +29,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         dto.setEmail(employee.getEmail());
         dto.setBirthDate(employee.getBirthDate());
         dto.setSalary(employee.getSalary());
+
+        // Map department information if present
+        if (employee.getDepartment() != null) {
+            dto.setDepartmentId(employee.getDepartment().getId());
+            dto.setDepartmentName(employee.getDepartment().getName());
+        }
+
         return dto;
     }
 
@@ -36,6 +46,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setEmail(dto.getEmail());
         employee.setBirthDate(dto.getBirthDate());
         employee.setSalary(dto.getSalary());
+
+        // Set department if departmentId is provided
+        if (dto.getDepartmentId() != null) {
+            Department department = departmentRepo.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Department not found with id: " + dto.getDepartmentId()));
+            employee.setDepartment(department);
+        }
+
         return employee;
     }
 
@@ -78,6 +97,16 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setEmail(employeeDto.getEmail());
         employee.setBirthDate(employeeDto.getBirthDate());
         employee.setSalary(employeeDto.getSalary());
+
+        // Update department if departmentId is provided
+        if (employeeDto.getDepartmentId() != null) {
+            Department department = departmentRepo.findById(employeeDto.getDepartmentId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Department not found with id: " + employeeDto.getDepartmentId()));
+            employee.setDepartment(department);
+        } else {
+            employee.setDepartment(null);
+        }
 
         Employee updated = employeeRepo.save(employee);
         log.info("Employee updated successfully: {}", updated.getId());

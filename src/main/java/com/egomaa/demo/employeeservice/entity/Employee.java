@@ -25,4 +25,8 @@ public class Employee {
     private LocalDate birthDate;
     private Double salary;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
 }
