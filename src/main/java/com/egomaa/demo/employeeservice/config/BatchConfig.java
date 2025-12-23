@@ -68,7 +68,7 @@ public class BatchConfig {
     @Bean
     public Step salaryIncreaseStep(ItemProcessor<Employee, Employee> employeeProcessor) {
         return new StepBuilder("salaryIncreaseStep", jobRepository)
-                .<Employee, Employee>chunk(6, platformTransactionManager)
+                .<Employee, Employee>chunk(3, platformTransactionManager)
                 .reader(employeeReader())
                 .processor(employeeProcessor)
                 .writer(employeeWriter())
