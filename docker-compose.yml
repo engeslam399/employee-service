@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # The Database Service
+  mysql-db:
+    image: mysql:8.0
+    container_name: employee-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: comp_db
+    ports:
+      - "3307:3306" # Exposes DB to your local machine port 3307 (to avoid conflict with local MySQL)
+    networks:
+      - spring-net
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+
+  # Your Application Service
+  employee-service:
+    build: . # Builds the Dockerfile in current directory
+    container_name: employee-service
+    ports:
+      - "8080:9099" # Maps Host Port 8080 -> Container Port 9099 (your app port)
+    environment:
+      # Notice the hostname is 'mysql-db' (the service name above)
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/comp_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks:
+      - spring-net
+
+networks:
+  spring-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
